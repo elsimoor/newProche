@@ -1,7 +1,6 @@
 // src/graphql/resolvers/tableResolvers.ts
 
 import { AuthenticationError } from 'apollo-server-express';
-// import { Types } from 'mongoose';
 import TableModel from '../../models/TableModel';
 
 interface Context {

@@ -1,7 +1,6 @@
 // src/graphql/resolvers/staffResolvers.ts
 
 import { AuthenticationError } from 'apollo-server-express';
-// import { Types } from 'mongoose';
 import StaffModel from '../../models/StaffModel';
 
 interface Context {
