@@ -1,0 +1,4 @@
+# FIX: Added GraphQL mutation for deleting a room
+mutation DeleteRoom($id: ID!) {
+  deleteRoom(id: $id)
+}

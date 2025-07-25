@@ -1,0 +1,20 @@
+# FIX: Added GraphQL mutation for creating a hotel
+mutation CreateHotel($input: HotelInput!) {
+  createHotel(input: $input) {
+    id
+    name
+    description
+    address {
+      street
+      city
+      state
+      zipCode
+      country
+    }
+    contact {
+      phone
+      email
+      website
+    }
+  }
+}

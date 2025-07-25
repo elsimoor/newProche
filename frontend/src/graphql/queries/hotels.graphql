@@ -1,0 +1,20 @@
+# FIX: Added GraphQL query for fetching hotels
+query Hotels {
+  hotels {
+    id
+    name
+    description
+    address {
+      street
+      city
+      state
+      zipCode
+      country
+    }
+    contact {
+      phone
+      email
+      website
+    }
+  }
+}
