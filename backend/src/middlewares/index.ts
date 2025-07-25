@@ -1,8 +1,11 @@
 import { notFound } from "./404";
 import {
   BatchUsers,
-  BatchPatients,
-  BatchVideos
+  BatchBusiness,
+  BatchRoom,
+  BatchTable,
+  BatchService,
+  BatchUStaff,
 } from "./DataLoader";
 
 import { isAuthenticated } from "./isAuthenticated";
@@ -17,6 +20,10 @@ export {
   verifyToken,
   paginate,
   BatchUsers,
-  BatchPatients,
-  BatchVideos
+  BatchBusiness,
+  BatchRoom,
+  BatchTable,
+  BatchService,
+  BatchUStaff,
+
 };

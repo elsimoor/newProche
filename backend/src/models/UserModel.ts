@@ -1,67 +1,101 @@
-import { Schema, model } from "mongoose";
+import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-interface User {
-  username?: string;
-  name?: string;
-  firstName?: string;
-  lastName?: string;
+interface IUser extends Document {
+  lastName: string;
+  firstName: string;
   email: string;
   password: string;
+  role: 'admin' | 'manager' | 'staff' | 'customer';
+  businessType?: 'hotel' | 'restaurant' | 'salon';
+  businessId?: mongoose.Types.ObjectId;
+  avatar?: string;
   phone?: string;
-  address?: string;
-  city?: string;
-  avatarUrl?: string;
-  imageUrl?: string;
-  role: 'ADMIN' | 'DOCTOR' | 'MANAGER' | 'PATIENT' | 'SUPERADMIN';
-  twoFactorSecret?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  nationalId: string;
-  condition?: string;
-  lastVisit?: Date;
-  permission?: string;
-  createdBy?: string;
-  doctor?: string;
-  patients?: string[];
-  videos?: string[];
-  isDeleted?: boolean;
-  mapsUrl?: string;
-  latitude: string
-  longitude: string
-  isOrtho?: boolean;
+  isActive: boolean;
+  lastLogin?: Date;
+  preferences: {
+    notifications: {
+      email: boolean;
+      sms: boolean;
+      push: boolean;
+    };
+    language: string;
+    timezone: string;
+  };
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const UserSchema = new Schema<User>(
-  {
-    name: { type: String },
-    username: { type: String },
-    email: { type: String, unique: true },
-    password: { type: String },
-    role: { type: String, enum: ['ADMIN', 'DOCTOR', 'MANAGER', 'PATIENT', 'SUPERADMIN'] },
-    doctor: { type: Schema.Types.ObjectId, ref: "User" },
-    patients: [{ type: Schema.Types.ObjectId, ref: "Patient" }],
-    twoFactorSecret: { type: String },
-    nationalId: { type: String, unique: true },
-    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
-    permission: { type: String },
-    condition: { type: String },
-    lastVisit: { type: Date },
-    imageUrl: { type: String },
-    videos: [{ type: Schema.Types.ObjectId, ref: "Video" }],
-
-    firstName: { type: String },
-    lastName: { type: String },
-    phone: { type: String },
-    address: { type: String },
-    city: { type: String },
-    avatarUrl: { type: String },
-    isDeleted: { type: Boolean, default: false },
-    mapsUrl: { type: String },
-    latitude: { type: Number },   // Changed to Number for float values
-    longitude: { type: Number },  // Changed to Number for float values
-    isOrtho: { type: Boolean, default: false }
+const userSchema = new Schema<IUser>({
+  lastName: {
+    type: String,
+    trim: true
   },
-  { timestamps: true }
-);
+   firstName: {
+    type: String,
+    trim: true
+  },
+  email: {
+    type: String,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    minlength: 6
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'manager', 'staff', 'customer'],
+    default: 'customer'
+  },
+  businessType: {
+    type: String,
+    enum: ['hotel', 'restaurant', 'salon'],
+    required: function() {
+      return this.role !== 'customer';
+    }
+  },
+  businessId: {
+    type: Schema.Types.ObjectId,
+    refPath: 'businessType'
+  },
+  avatar: String,
+  phone: String,
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  lastLogin: Date,
+  preferences: {
+    notifications: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+      push: { type: Boolean, default: true }
+    },
+    language: { type: String, default: 'en' },
+    timezone: { type: String, default: 'UTC' }
+  }
+}, {
+  timestamps: true
+});
 
-export const UserModel = model<User>("User", UserSchema);
+// Hash password before saving
+userSchema.pre<IUser>('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Compare password method
+userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+export default mongoose.model<IUser>('User', userSchema);
