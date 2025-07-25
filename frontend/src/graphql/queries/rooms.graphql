@@ -1,0 +1,20 @@
+# FIX: Added GraphQL query for fetching rooms
+query Rooms($hotelId: ID!, $status: String) {
+  rooms(hotelId: $hotelId, status: $status) {
+    id
+    hotelId
+    number
+    type
+    floor
+    capacity
+    price
+    size
+    status
+    amenities
+    features
+    condition
+    lastCleaned
+    nextMaintenance
+    images
+  }
+}

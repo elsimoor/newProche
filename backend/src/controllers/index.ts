@@ -1,5 +1,6 @@
 import { gql } from "apollo-server-express";
 import { businessResolvers, businessTypeDef } from "./Business";
+import { hotelResolvers, hotelTypeDef } from "./Hotel";
 import { guestResolvers, guestTypeDef } from "./Guest";
 import { menuResolvers, menuItemTypeDef } from "./menuItem";
 import { reservationResolvers, reservationTypeDef } from "./reservation";
@@ -29,6 +30,7 @@ export const extendedTypeDefs = gql`
 const resolvers = [
   userResolvers,
   businessResolvers,
+  hotelResolvers,
   guestResolvers,
   menuResolvers,
   reservationResolvers,
@@ -43,6 +45,7 @@ const typeDefs = [
   userTypeDefs,
   extendedTypeDefs,
   businessTypeDef,
+  hotelTypeDef,
   guestTypeDef,
   menuItemTypeDef,
   reservationTypeDef,

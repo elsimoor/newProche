@@ -1,0 +1,4 @@
+# FIX: Added GraphQL mutation for deleting a hotel
+mutation DeleteHotel($id: ID!) {
+  deleteHotel(id: $id)
+}

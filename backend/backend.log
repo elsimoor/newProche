@@ -1,0 +1,5 @@
+
+> layli@1.0.0 dev
+> nodemon --exec ts-node src/index.ts
+
+sh: 1: nodemon: not found

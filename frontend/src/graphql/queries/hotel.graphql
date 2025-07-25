@@ -1,0 +1,43 @@
+# FIX: Added GraphQL query for fetching a single hotel
+query Hotel($id: ID!) {
+  hotel(id: $id) {
+    id
+    name
+    description
+    address {
+      street
+      city
+      state
+      zipCode
+      country
+    }
+    contact {
+      phone
+      email
+      website
+    }
+    amenities {
+      name
+      description
+      included
+      category
+    }
+    services {
+      name
+      description
+      price
+      category
+      available
+    }
+    policies {
+      title
+      description
+      category
+    }
+    images
+    rating {
+      average
+      count
+    }
+  }
+}
