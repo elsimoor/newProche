@@ -1,7 +1,7 @@
 // src/graphql/resolvers/tableResolvers.ts
 
 import { AuthenticationError } from 'apollo-server-express';
-import { Types } from 'mongoose';
+// import { Types } from 'mongoose';
 import TableModel from '../../models/TableModel';
 
 interface Context {
@@ -26,7 +26,7 @@ export const tableResolvers = {
       _: any,
       { id }: { id: string }
     ) => {
-      if (!Types.ObjectId.isValid(id)) {
+      if (!id) {
         return null;
       }
       return TableModel.findById(id).exec();
@@ -55,7 +55,7 @@ export const tableResolvers = {
       if (!user) {
         throw new AuthenticationError('Not authenticated');
       }
-      if (!Types.ObjectId.isValid(id)) {
+      if (!id) {
         return null;
       }
       return TableModel.findByIdAndUpdate(id, input, { new: true }).exec();
@@ -69,7 +69,7 @@ export const tableResolvers = {
       if (!user) {
         throw new AuthenticationError('Not authenticated');
       }
-      if (!Types.ObjectId.isValid(id)) {
+      if (!id) {
         return false;
       }
       await TableModel.findByIdAndUpdate(id, { isActive: false }).exec();

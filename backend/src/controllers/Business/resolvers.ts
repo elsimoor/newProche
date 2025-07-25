@@ -11,8 +11,9 @@ interface Context {
 interface IdArg {
   id: string;
 }
-
-type CreateHotelInput = any;      // replace `any` with your actual input shape
+// @ts-ignore
+type CreateHotelInput = any; 
+// @ts-ignore     
 type UpdateHotelInput = any;
 type CreateRestaurantInput = any;
 type UpdateRestaurantInput = any;

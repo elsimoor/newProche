@@ -1,7 +1,7 @@
 // src/graphql/resolvers/staffResolvers.ts
 
 import { AuthenticationError } from 'apollo-server-express';
-import { Types } from 'mongoose';
+// import { Types } from 'mongoose';
 import StaffModel from '../../models/StaffModel';
 
 interface Context {
@@ -26,7 +26,7 @@ export const staffResolvers = {
       _: any,
       { id }: { id: string }
     ) => {
-      if (!Types.ObjectId.isValid(id)) {
+      if (!id) {
         return null;
       }
       return StaffModel.findById(id).exec();
@@ -55,7 +55,7 @@ export const staffResolvers = {
       if (!user) {
         throw new AuthenticationError('Not authenticated');
       }
-      if (!Types.ObjectId.isValid(id)) {
+      if (!id) {
         return null;
       }
       return StaffModel.findByIdAndUpdate(id, input, { new: true }).exec();
@@ -69,7 +69,7 @@ export const staffResolvers = {
       if (!user) {
         throw new AuthenticationError('Not authenticated');
       }
-      if (!Types.ObjectId.isValid(id)) {
+      if (!id) {
         return false;
       }
       await StaffModel.findByIdAndUpdate(id, { isActive: false }).exec();
