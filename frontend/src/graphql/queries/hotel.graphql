@@ -1,4 +1,3 @@
-# FIX: Added GraphQL query for fetching a single hotel
 query Hotel($id: ID!) {
   hotel(id: $id) {
     id
