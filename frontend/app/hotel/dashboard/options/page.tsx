@@ -1,32 +1,38 @@
 "use client"
 
 import type React from "react"
+import { useQuery, useMutation, gql } from "@apollo/client"
+import { HotelDocument, UpdateHotelDocument } from "@/src/graphql/generated"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, Wifi, Car, Coffee, Dumbbell, Waves, Utensils, X } from "lucide-react"
 
+// Interfaces remain the same for form data structure, but will not be used for main state
 interface Service {
-  id: number
   name: string
   description: string
   price: number
   category: string
   available: boolean
-  icon: any
 }
 
 interface Amenity {
-  id: number
   name: string
+  description: string
   included: boolean
   category: string
 }
 
 interface Policy {
-  id: number
   title: string
   description: string
   category: string
+}
+
+const cleanTypename = (obj: any) => {
+  if (!obj) return obj
+  const { __typename, ...rest } = obj
+  return rest
 }
 
 export default function HotelOptions() {
@@ -34,170 +40,135 @@ export default function HotelOptions() {
   const [showModal, setShowModal] = useState(false)
   const [editingItem, setEditingItem] = useState<any>(null)
   const [modalType, setModalType] = useState<"service" | "amenity" | "policy">("service")
-
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: 1,
-      name: "Room Service",
-      description: "24/7 in-room dining service",
-      price: 15,
-      category: "Food & Beverage",
-      available: true,
-      icon: Utensils,
-    },
-    {
-      id: 2,
-      name: "Airport Transfer",
-      description: "Luxury car service to/from airport",
-      price: 45,
-      category: "Transportation",
-      available: true,
-      icon: Car,
-    },
-    {
-      id: 3,
-      name: "Spa Treatment",
-      description: "Full body massage and wellness treatments",
-      price: 120,
-      category: "Wellness",
-      available: true,
-      icon: Waves,
-    },
-    {
-      id: 4,
-      name: "Fitness Center",
-      description: "24/7 access to fully equipped gym",
-      price: 0,
-      category: "Fitness",
-      available: true,
-      icon: Dumbbell,
-    },
-    {
-      id: 5,
-      name: "Business Center",
-      description: "Meeting rooms and office facilities",
-      price: 25,
-      category: "Business",
-      available: true,
-      icon: Coffee,
-    },
-    {
-      id: 6,
-      name: "Premium WiFi",
-      description: "High-speed internet access",
-      price: 10,
-      category: "Technology",
-      available: false,
-      icon: Wifi,
-    },
-  ])
-
-  const [amenities, setAmenities] = useState<Amenity[]>([
-    { id: 1, name: "Free WiFi", included: true, category: "Technology" },
-    { id: 2, name: "Air Conditioning", included: true, category: "Comfort" },
-    { id: 3, name: "Flat Screen TV", included: true, category: "Entertainment" },
-    { id: 4, name: "Mini Bar", included: false, category: "Food & Beverage" },
-    { id: 5, name: "Safe Deposit Box", included: true, category: "Security" },
-    { id: 6, name: "Hair Dryer", included: true, category: "Personal Care" },
-    { id: 7, name: "Balcony", included: false, category: "Space" },
-    { id: 8, name: "Ocean View", included: false, category: "View" },
-  ])
-
-  const [policies, setPolicies] = useState<Policy[]>([
-    {
-      id: 1,
-      title: "Check-in Policy",
-      description: "Standard check-in time is 3:00 PM. Early check-in subject to availability.",
-      category: "Check-in/Check-out",
-    },
-    {
-      id: 2,
-      title: "Check-out Policy",
-      description: "Check-out time is 11:00 AM. Late check-out available for additional fee.",
-      category: "Check-in/Check-out",
-    },
-    {
-      id: 3,
-      title: "Cancellation Policy",
-      description: "Free cancellation up to 24 hours before arrival. Late cancellations subject to one night charge.",
-      category: "Booking",
-    },
-    {
-      id: 4,
-      title: "Pet Policy",
-      description: "Pets are welcome with advance notice. Additional cleaning fee applies.",
-      category: "Accommodation",
-    },
-    {
-      id: 5,
-      title: "Smoking Policy",
-      description: "This is a non-smoking property. Smoking permitted in designated outdoor areas only.",
-      category: "Health & Safety",
-    },
-  ])
-
   const [formData, setFormData] = useState<any>({})
+
+  const { data, loading, error, refetch } = useQuery(HotelDocument, {
+    variables: { id: "1" },
+  })
+
+  const [updateHotel, { loading: updateLoading, error: updateError }] = useMutation(UpdateHotelDocument, {
+    onCompleted: () => {
+      refetch()
+      setShowModal(false)
+      setEditingItem(null)
+      setFormData({})
+    },
+    onError: (err) => {
+      console.error("Failed to update hotel:", err)
+      // Optionally, show a toast notification to the user
+    },
+  })
+
+  const services = data?.hotel?.services || []
+  const amenities = data?.hotel?.amenities || []
+  const policies = data?.hotel?.policies || []
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!data?.hotel) return
 
-    if (modalType === "service") {
-      if (editingItem) {
-        setServices(services.map((service) => (service.id === editingItem.id ? { ...service, ...formData } : service)))
-      } else {
-        const newService: Service = {
-          id: Math.max(...services.map((s) => s.id)) + 1,
-          icon: Utensils,
-          ...formData,
-        }
-        setServices([...services, newService])
-      }
-    } else if (modalType === "amenity") {
-      if (editingItem) {
-        setAmenities(
-          amenities.map((amenity) => (amenity.id === editingItem.id ? { ...amenity, ...formData } : amenity)),
-        )
-      } else {
-        const newAmenity: Amenity = {
-          id: Math.max(...amenities.map((a) => a.id)) + 1,
-          ...formData,
-        }
-        setAmenities([...amenities, newAmenity])
-      }
-    } else if (modalType === "policy") {
-      if (editingItem) {
-        setPolicies(policies.map((policy) => (policy.id === editingItem.id ? { ...policy, ...formData } : policy)))
-      } else {
-        const newPolicy: Policy = {
-          id: Math.max(...policies.map((p) => p.id)) + 1,
-          ...formData,
-        }
-        setPolicies([...policies, newPolicy])
-      }
+    const hotelInput = {
+      name: data.hotel.name,
+      description: data.hotel.description,
+      address: cleanTypename(data.hotel.address),
+      contact: cleanTypename(data.hotel.contact),
+      services: data.hotel.services.map(cleanTypename),
+      amenities: data.hotel.amenities.map(cleanTypename),
+      policies: data.hotel.policies.map(cleanTypename),
     }
 
-    setShowModal(false)
-    setEditingItem(null)
-    setFormData({})
+    let updatedList
+    switch (modalType) {
+      case "service":
+        updatedList = [...hotelInput.services]
+        break
+      case "amenity":
+        updatedList = [...hotelInput.amenities]
+        break
+      case "policy":
+        updatedList = [...hotelInput.policies]
+        break
+    }
+
+    if (editingItem) {
+      updatedList[editingItem.index] = { ...updatedList[editingItem.index], ...formData }
+    } else {
+      updatedList.push(formData)
+    }
+
+    switch (modalType) {
+      case "service":
+        hotelInput.services = updatedList
+        break
+      case "amenity":
+        hotelInput.amenities = updatedList
+        break
+      case "policy":
+        hotelInput.policies = updatedList
+        break
+    }
+
+    updateHotel({
+      variables: {
+        id: data.hotel.id,
+        input: hotelInput,
+      },
+    })
   }
 
-  const handleEdit = (item: any, type: "service" | "amenity" | "policy") => {
-    setEditingItem(item)
+  const handleEdit = (item: any, type: "service" | "amenity" | "policy", index: number) => {
+    setEditingItem({ ...item, index })
     setFormData(item)
     setModalType(type)
     setShowModal(true)
   }
 
-  const handleDelete = (id: number, type: "service" | "amenity" | "policy") => {
-    if (confirm("Are you sure you want to delete this item?")) {
-      if (type === "service") {
-        setServices(services.filter((service) => service.id !== id))
-      } else if (type === "amenity") {
-        setAmenities(amenities.filter((amenity) => amenity.id !== id))
-      } else if (type === "policy") {
-        setPolicies(policies.filter((policy) => policy.id !== id))
-      }
+  const handleDelete = (index: number, type: "service" | "amenity" | "policy") => {
+    if (!data?.hotel || !confirm("Are you sure you want to delete this item?")) return
+
+    const hotelInput = {
+      name: data.hotel.name,
+      description: data.hotel.description,
+      address: cleanTypename(data.hotel.address),
+      contact: cleanTypename(data.hotel.contact),
+      services: data.hotel.services.map(cleanTypename),
+      amenities: data.hotel.amenities.map(cleanTypename),
+      policies: data.hotel.policies.map(cleanTypename),
     }
+
+    let updatedList
+    switch (type) {
+      case "service":
+        updatedList = [...hotelInput.services]
+        break
+      case "amenity":
+        updatedList = [...hotelInput.amenities]
+        break
+      case "policy":
+        updatedList = [...hotelInput.policies]
+        break
+    }
+
+    updatedList.splice(index, 1)
+
+    switch (type) {
+      case "service":
+        hotelInput.services = updatedList
+        break
+      case "amenity":
+        hotelInput.amenities = updatedList
+        break
+      case "policy":
+        hotelInput.policies = updatedList
+        break
+    }
+
+    updateHotel({
+      variables: {
+        id: data.hotel.id,
+        input: hotelInput,
+      },
+    })
   }
 
   const openCreateModal = (type: "service" | "amenity" | "policy") => {
@@ -206,6 +177,9 @@ export default function HotelOptions() {
     setFormData({})
     setShowModal(true)
   }
+
+  if (loading) return <p>Loading...</p>
+  if (error) return <p>Error loading hotel data: {error.message}</p>
 
   return (
     <div className="p-6 space-y-6">
@@ -257,11 +231,11 @@ export default function HotelOptions() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {services.map((service) => {
-                  const Icon = service.icon
+                {services.map((service, index) => {
+                  const Icon = Utensils // Default icon
                   return (
                     <div
-                      key={service.id}
+                      key={index}
                       className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between mb-4">
@@ -276,13 +250,13 @@ export default function HotelOptions() {
                         </div>
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => handleEdit(service, "service")}
+                            onClick={() => handleEdit(service, "service", index)}
                             className="text-gray-400 hover:text-blue-600"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(service.id, "service")}
+                            onClick={() => handleDelete(index, "service")}
                             className="text-gray-400 hover:text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -336,9 +310,9 @@ export default function HotelOptions() {
                     <div className="space-y-3">
                       {amenities
                         .filter((a) => a.included)
-                        .map((amenity) => (
+                        .map((amenity, index) => (
                           <div
-                            key={amenity.id}
+                            key={index}
                             className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200"
                           >
                             <div>
@@ -348,13 +322,13 @@ export default function HotelOptions() {
                             <div className="flex items-center space-x-2">
                               <span className="text-green-600 text-sm font-medium">Included</span>
                               <button
-                                onClick={() => handleEdit(amenity, "amenity")}
+                                onClick={() => handleEdit(amenity, "amenity", index)}
                                 className="text-gray-400 hover:text-blue-600"
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(amenity.id, "amenity")}
+                                onClick={() => handleDelete(index, "amenity")}
                                 className="text-gray-400 hover:text-red-600"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -370,9 +344,9 @@ export default function HotelOptions() {
                     <div className="space-y-3">
                       {amenities
                         .filter((a) => !a.included)
-                        .map((amenity) => (
+                        .map((amenity, index) => (
                           <div
-                            key={amenity.id}
+                            key={index}
                             className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200"
                           >
                             <div>
@@ -382,13 +356,13 @@ export default function HotelOptions() {
                             <div className="flex items-center space-x-2">
                               <span className="text-blue-600 text-sm font-medium">Premium</span>
                               <button
-                                onClick={() => handleEdit(amenity, "amenity")}
+                                onClick={() => handleEdit(amenity, "amenity", index)}
                                 className="text-gray-400 hover:text-blue-600"
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(amenity.id, "amenity")}
+                                onClick={() => handleDelete(index, "amenity")}
                                 className="text-gray-400 hover:text-red-600"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -418,8 +392,8 @@ export default function HotelOptions() {
               </div>
 
               <div className="space-y-4">
-                {policies.map((policy) => (
-                  <div key={policy.id} className="border border-gray-200 rounded-lg p-6">
+                {policies.map((policy, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h3 className="font-semibold text-gray-900">{policy.title}</h3>
@@ -429,13 +403,13 @@ export default function HotelOptions() {
                       </div>
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => handleEdit(policy, "policy")}
+                          onClick={() => handleEdit(policy, "policy", index)}
                           className="text-gray-400 hover:text-blue-600"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(policy.id, "policy")}
+                          onClick={() => handleDelete(index, "policy")}
                           className="text-gray-400 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
