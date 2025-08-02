@@ -3,3 +3,4 @@ declare module "written-number" {
   function writtenNumber(value: number, opts?: Options): string;
   export = writtenNumber;
 }
+ 
